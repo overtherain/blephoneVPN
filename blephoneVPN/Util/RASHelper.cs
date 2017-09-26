@@ -12,6 +12,7 @@ namespace blephoneVPN.Util
 {
     class RASHelper
     {
+        public static Type TAG = typeof(RASHelper);
         // 系统路径 C:\windows\system32\
         private static string WinDir = Environment.GetFolderPath(Environment.SpecialFolder.System) + @"\";
         // rasdial.exe
@@ -32,6 +33,8 @@ namespace blephoneVPN.Util
 
         public RASHelper()
         {
+            Log.debug(TAG, "RASHelper init");
+            Log.console("RASHelper init");
             CurrentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             PhoneBookPath = Path.Combine(CurrentDirectory, @"Resource\rasphone.pbk");
         }
@@ -45,6 +48,8 @@ namespace blephoneVPN.Util
         /// <param name="_passWord"></param>
         public RASHelper(string _vpnIP, string _vpnName, string _userName, string _passWord)
         {
+            Log.debug(TAG, "RASHelper input vars _vpnIP : " + _vpnIP + ", _vpnName : " + _vpnName + ", _userName : " + _userName);
+            Log.console("RASHelper input vars _vpnIP : " + _vpnIP + ", _vpnName : " + _vpnName + ", _userName : " + _userName);
             this.IPToPing = _vpnIP;
             this.VPNName = _vpnName;
             this.UserName = _userName;
@@ -91,6 +96,8 @@ namespace blephoneVPN.Util
         /// <returns></returns>
         public void TryConnectVPN(string connVpnName,string connUserName,string connPassWord)
         {
+            Log.debug(TAG, "TryConnectVPN");
+            Log.console("TryConnectVPN");
             try
             {
                 string args = string.Format("{0} {1} {2}", connVpnName, connUserName, connPassWord);
@@ -101,6 +108,8 @@ namespace blephoneVPN.Util
             }
             catch (Exception Ex)
             {
+                Log.debug(TAG, "TryConnectVPN error, msg : " + Ex);
+                Log.console("TryConnectVPN error, msg : " + Ex);
                 Debug.Assert(false, Ex.ToString());
             }
         }
@@ -111,6 +120,8 @@ namespace blephoneVPN.Util
         /// <returns></returns>
         public void TryDisConnectVPN(string disConnVpnName)
         {
+            Log.debug(TAG, "TryDisConnectVPN");
+            Log.console("TryDisConnectVPN ");
             try
             {
                 string args = string.Format(@"{0} /d", disConnVpnName);
@@ -121,6 +132,8 @@ namespace blephoneVPN.Util
             }
             catch (Exception Ex)
             {
+                Log.debug(TAG, "TryDisConnectVPN error msg : " + Ex);
+                Log.console("TryDisConnectVPN error msg : " + Ex);
                 Debug.Assert(false, Ex.ToString());
             }
         }
@@ -130,6 +143,8 @@ namespace blephoneVPN.Util
         /// </summary>
         public void CreateOrUpdateVPN(string updateVPNname,string updateVPNip)
         {
+            Log.debug(TAG, "CreateOrUpdateVPN");
+            Log.console("CreateOrUpdateVPN ");
             RasDialer dialer = new RasDialer();
             RasPhoneBook allUsersPhoneBook = new RasPhoneBook();
             allUsersPhoneBook.Open();
@@ -137,6 +152,8 @@ namespace blephoneVPN.Util
             // 如果已经该名称的VPN已经存在，则更新这个VPN服务器地址
             if (allUsersPhoneBook.Entries.Contains(updateVPNname))
             {
+                Log.debug(TAG, "CreateOrUpdateVPN update");
+                Log.console("CreateOrUpdateVPN update");
                 allUsersPhoneBook.Entries[updateVPNname].PhoneNumber = updateVPNip;
                 // 不管当前VPN是否连接，服务器地址的更新总能成功，如果正在连接，则需要VPN重启后才能起作用
                 allUsersPhoneBook.Entries[updateVPNname].Update();                
@@ -144,6 +161,8 @@ namespace blephoneVPN.Util
             // 创建一个新VPN
             else
             {
+                Log.debug(TAG, "CreateOrUpdateVPN add new");
+                Log.console("CreateOrUpdateVPN add new");
                 RasEntry entry = RasEntry.CreateVpnEntry(updateVPNname, updateVPNip, RasVpnStrategy.L2tpOnly, RasDevice.GetDeviceByName("(L2TP)", RasDeviceType.Vpn));
                 entry.EncryptionType = RasEncryptionType.Optional;
                 allUsersPhoneBook.Entries.Add(entry);
@@ -159,6 +178,8 @@ namespace blephoneVPN.Util
         /// <param name="delVpnName"></param>
         public void TryDeleteVPN(string delVpnName)
         {
+            Log.debug(TAG, "TryDeleteVPN");
+            Log.console("TryDeleteVPN");
             RasDialer dialer = new RasDialer();
             RasPhoneBook allUsersPhoneBook = new RasPhoneBook();
             allUsersPhoneBook.Open();
@@ -173,25 +194,38 @@ namespace blephoneVPN.Util
         /// </summary>
         public List<string> GetCurrentConnectingVPNNames()
         {
+            Log.debug(TAG, "GetCurrentConnectingVPNNames");
+            Log.console("GetCurrentConnectingVPNNames");
             List<string> ConnectingVPNList = new List<string>();
             Process proIP = new Process();
+            string strResult = null;
+            Regex regger = null;
 
-            proIP.StartInfo.FileName = "cmd.exe ";
-            proIP.StartInfo.UseShellExecute = false;
-            proIP.StartInfo.RedirectStandardInput = true;
-            proIP.StartInfo.RedirectStandardOutput = true;
-            proIP.StartInfo.RedirectStandardError = true;
-            proIP.StartInfo.CreateNoWindow = true;//不显示cmd窗口 
-            proIP.Start();
+            try 
+            {
+                proIP.StartInfo.FileName = "cmd.exe ";
+                proIP.StartInfo.UseShellExecute = false;
+                proIP.StartInfo.RedirectStandardInput = true;
+                proIP.StartInfo.RedirectStandardOutput = true;
+                proIP.StartInfo.RedirectStandardError = true;
+                proIP.StartInfo.CreateNoWindow = true;//不显示cmd窗口 
+                proIP.Start();
 
-            proIP.StandardInput.WriteLine(RasDialFileName);
-            proIP.StandardInput.WriteLine("exit");
+                proIP.StandardInput.WriteLine(RasDialFileName);
+                proIP.StandardInput.WriteLine("exit");
 
-            // 命令行运行结果
-            string strResult = proIP.StandardOutput.ReadToEnd();
-            proIP.Close();
+                // 命令行运行结果
+                strResult = proIP.StandardOutput.ReadToEnd();
+                proIP.Close();
 
-            Regex regger = new Regex("(?<=已连接\r\n)(.*\n)*(?=命令已完成)", RegexOptions.Multiline);
+                regger = new Regex("(?<=已连接\r\n)(.*\n)*(?=命令已完成)", RegexOptions.Multiline);
+            }
+            catch(Exception ex)
+            {
+                Log.debug(TAG, "GetCurrentConnectingVPNNames error msg : " + ex);
+                Log.console("GetCurrentConnectingVPNNames error msg : " + ex);
+            }
+            
 
             // 如果匹配，则说有正在连接的VPN
             if (regger.IsMatch(strResult))
@@ -203,6 +237,7 @@ namespace blephoneVPN.Util
                     ConnectingVPNList.Add(list[index].Replace("\r",""));
                 }
             }
+            Log.console("GetCurrentConnectingVPNNames ConnectingVPNList : " + ConnectingVPNList);
             // 没有正在连接的VPN，则直接返回一个空List<string>
             return ConnectingVPNList;
         }

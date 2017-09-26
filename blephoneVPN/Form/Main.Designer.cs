@@ -378,6 +378,7 @@
             this.tsm_warning.Name = "tsm_warning";
             this.tsm_warning.Size = new System.Drawing.Size(66, 21);
             this.tsm_warning.Text = "warning";
+            this.tsm_warning.Visible = false;
             this.tsm_warning.Click += new System.EventHandler(this.tsm_warning_Click);
             // 
             // Main

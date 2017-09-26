@@ -68,5 +68,12 @@ namespace blephoneVPN.Util
                 }
             }
         }
+
+        public static void console(string msg)
+        { 
+            #if DEBUG
+            Console.WriteLine(msg);
+            #endif
+        }
     }
 }
