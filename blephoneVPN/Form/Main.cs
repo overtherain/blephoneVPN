@@ -119,8 +119,8 @@ namespace blephoneVPN
             catch (Exception ex)
             {
                 this.button_login1.Enabled = true;
-                MessageBox.Show("拨号失败!mVPNConnectHelper error msg:" + ex.ToString());
-                Log.debug(TAG, "login_Click mVPNConnectHelper error : " + ex);
+                MessageBox.Show("mVPNConnectHelper 拨号失败!将尝试rasdial拨号.\n error msg:" + ex.ToString());
+                Log.debug(TAG, "login_Click mVPNConnectHelper error : " + ex.ToString());
                 try
                 {
                     mRASHelper = new RASHelper(connectIP, VPNNAME, connectUserName, connectPWD);
@@ -132,8 +132,8 @@ namespace blephoneVPN
                 catch (Exception err)
                 {
                     this.button_login1.Enabled = true;
-                    MessageBox.Show("拨号失败!mRASHelper error msg:" + err.ToString());
-                    Log.debug(TAG, "login_Click mRASHelper error : " + err);
+                    MessageBox.Show("mRASHelper拨号失败!VPN无法连接!\n error msg:" + err.ToString());
+                    Log.debug(TAG, "login_Click mRASHelper error : " + err.ToString());
                 }
             }
             /*try
@@ -279,14 +279,14 @@ namespace blephoneVPN
                 setUsers();
                 this.vpnnotify.ShowBalloonTip(3000, "...", "连接成功", ToolTipIcon.Info);
                 endTimeToDo();
-                this.button_login1.Enabled = false;
+                this.UIThread(delegate { this.button_login1.Enabled = false; });
                 this.Hide();
                 //new CreateNetDrive().Show();
                 //PublicVar.isDriveOpen = true;
             }
             else if (e.Error != null)
             {
-                this.button_login1.Enabled = true;
+                this.UIThread(delegate { this.button_login1.Enabled = true; });
                 Log.debug(TAG, "VPNConnectHelper_DialAsyncComplete连接失败 : " + e.Error.Message);
                 this.vpnnotify.ShowBalloonTip(3000, "...", "连接失败" + "\r\n" + e.Error.Message, ToolTipIcon.Info);
             }
@@ -310,7 +310,8 @@ namespace blephoneVPN
             }
             else
             {
-                this.button_login1.Enabled = true;
+
+                this.UIThread(delegate { this.button_login1.Enabled = true; });
                 Log.debug(TAG, "VPNConnectHelper_DialStateChange错误信息:" + e.ErrorMessage);
                 if (btn_clicked == 1)
                 {
@@ -476,7 +477,7 @@ namespace blephoneVPN
             catch (Exception ex)
             {
                 MessageBox.Show("获取保存用户信息失败!error msg:" + ex.ToString());
-                Log.debug(TAG, "get all users failed Exception : " + ex);
+                Log.debug(TAG, "get all users failed Exception : " + ex.ToString());
             }
             finally
             {
@@ -515,7 +516,7 @@ namespace blephoneVPN
             catch (Exception ex)
             {
                 MessageBox.Show("保存用户信息失败!error msg:" + ex.ToString());
-                Log.debug(TAG, "add user failed Exception : " + ex);
+                Log.debug(TAG, "add user failed Exception : " + ex.ToString());
             }
             finally
             {

@@ -105,7 +105,7 @@ namespace blephoneVPN.Util
             }
             catch (Exception Ex)
             {
-                Log.debug(TAG, "TryConnectVPN error, msg : " + Ex);
+                Log.debug(TAG, "TryConnectVPN error, msg : " + Ex.ToString());
                 Debug.Assert(false, Ex.ToString());
             }
         }
@@ -127,7 +127,7 @@ namespace blephoneVPN.Util
             }
             catch (Exception Ex)
             {
-                Log.debug(TAG, "TryDisConnectVPN error msg : " + Ex);
+                Log.debug(TAG, "TryDisConnectVPN error msg : " + Ex.ToString());
                 Debug.Assert(false, Ex.ToString());
             }
         }
@@ -208,7 +208,7 @@ namespace blephoneVPN.Util
             }
             catch(Exception ex)
             {
-                Log.debug(TAG, "GetCurrentConnectingVPNNames error msg : " + ex);
+                Log.debug(TAG, "GetCurrentConnectingVPNNames error msg : " + ex.ToString());
             }
 
             Log.debug(TAG, "GetCurrentConnectingVPNNames run process result : \n" + strResult);

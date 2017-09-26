@@ -50,7 +50,7 @@ namespace blephoneVPN.Util
             Log.debug(TAG, "CreateOrUpdateVPNEntry ip:" + ip + ", user:" + user);
             try
             {
-                RasEntry entry;
+                RasEntry entry = new RasEntry(VPNNAME);
                 if (!allUsersPhoneBook.Entries.Contains(VPNNAME))
                 {
                     entry = RasEntry.CreateVpnEntry(VPNNAME, ip, RasVpnStrategy.L2tpOnly, RasDevice.GetDeviceByName("(L2TP)", RasDeviceType.Vpn));
@@ -112,6 +112,7 @@ namespace blephoneVPN.Util
                 Log.debug(TAG, "Disconnect Remove PhoneBook");
             }*/
             //ReadOnlyCollection<RasConnection> conList = RasConnection.GetActiveConnections();
+            //foreach (RasConnection conn in conList)
             foreach (RasConnection conn in dialer.GetActiveConnections())
             {
                 Log.debug(TAG, "Disconnect conn.EntryName : " + conn.EntryName);
@@ -133,7 +134,7 @@ namespace blephoneVPN.Util
 
         private void dialer_StateChanged(object sender, StateChangedEventArgs e)
         {
-            Log.debug(TAG, "dialer_StateChanged State:" + e.State);
+            Log.debug(TAG, "dialer_StateChanged State:" + e.State.ToString());
             DialStateChange((RasDialer)sender, e);
         }
     }

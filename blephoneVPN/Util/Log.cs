@@ -67,7 +67,7 @@ namespace blephoneVPN.Util
             }
             catch(Exception ex)
             {
-                Console.WriteLine("Create log file error : " + ex);
+                Console.WriteLine("Create log file error : " + ex.ToString());
                 Debug.Assert(false, ex.ToString());
             }
             finally
