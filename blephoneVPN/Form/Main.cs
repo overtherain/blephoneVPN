@@ -60,8 +60,8 @@ namespace blephoneVPN
             this.tb_msg2.Text = "";
             mVPNConnectHelper = new VPNConnectHelper();
             this.tabControl1.TabPages.Remove(this.tabControl1.TabPages[1]);//移除第二个tabpage
-            logname = AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.ToString("yyyyMMdd_HH-mm") + ".log";
-            Log.CreateDirectory(logname);
+            //logname = AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.ToString("yyyyMMdd_HH-mm") + ".log";
+            //Log.CreateDirectory(logname);
             key = des.pubKey();
             emptykey = des.MD5Encrypt("", key);
             //endTimeToDo();
@@ -82,31 +82,29 @@ namespace blephoneVPN
         private void login_Click(object sender, EventArgs e)
         {
             Button but = (Button)sender;
+            getInputValue(but.Name);
+            getConnectIP();
             try
             {
-                getInputValue(but.Name);
-                getConnectIP();
                 if (connectIP != "" && connectUserName != "" && connectPWD != "")
                 {
                     if (but.Name == "button_login1")
                     {
-                        Log.debug(TAG, "button_login1");
-                        Log.console("button_login1 clicked");
-                        //this.button_login1.Enabled = false;
+                        Log.debug(TAG, "button_login1 clicked");
+                        this.button_login1.Enabled = false;
                         //this.tb_username1.Enabled = false;
                         //this.tb_pwd1.Enabled = false;
                         btn_clicked = 1;
                     }
                     else if (but.Name == "button_login2")
                     {
-                        Log.debug(TAG, "button_login2");
-                        Log.console("button_login2 clicked");
+                        Log.debug(TAG, "button_login2 clicked");
                         //this.button_login2.Enabled = false;
                         //this.tb_username2.Enabled = false;
                         //this.tb_pwd2.Enabled = false;
                         btn_clicked = 2;
                     }
-                    mRASHelper = new RASHelper(connectIP, VPNNAME, connectUserName, connectPWD);
+                    //mRASHelper = new RASHelper(connectIP, VPNNAME, connectUserName, connectPWD);
                     mVPNConnectHelper.DialAsyncComplete += new VPNConnectHelper.DialAsyncCompleteHandler(VPNConnectHelper_DialAsyncComplete);
                     mVPNConnectHelper.DialStateChange += new VPNConnectHelper.DialStateChangeHandler(VPNConnectHelper_DialStateChange);
                     mVPNConnectHelper.DialAsync(connectIP, connectUserName, connectPWD);
@@ -120,35 +118,66 @@ namespace blephoneVPN
             }
             catch (Exception ex)
             {
+                this.button_login1.Enabled = true;
                 MessageBox.Show("拨号失败!mVPNConnectHelper error msg:" + ex.ToString());
-                Log.console("拨号失败!mVPNConnectHelper error msg:" + ex);
                 Log.debug(TAG, "login_Click mVPNConnectHelper error : " + ex);
                 try
                 {
+                    mRASHelper = new RASHelper(connectIP, VPNNAME, connectUserName, connectPWD);
                     mRASHelper.CreateOrUpdateVPN();
                     mRASHelper.TryConnectVPN();
+                    searchVPNs();
                     connCount = 2;
                 }
                 catch (Exception err)
                 {
+                    this.button_login1.Enabled = true;
                     MessageBox.Show("拨号失败!mRASHelper error msg:" + err.ToString());
-                    Log.console("拨号失败!mRASHelper error msg:" + err);
                     Log.debug(TAG, "login_Click mRASHelper error : " + err);
                 }
-            } 
+            }
+            /*try
+            {
+                if (connectIP != "" && connectUserName != "" && connectPWD != "")
+                {
+                    if (but.Name == "button_login1")
+                    {
+                        Log.debug(TAG, "button_login1 clicked");
+                        btn_clicked = 1;
+                    }
+                    else if (but.Name == "button_login2")
+                    {
+                        Log.debug(TAG, "button_login2 clicked");
+                        btn_clicked = 2;
+                    }
+                    mRASHelper = new RASHelper(connectIP, VPNNAME, connectUserName, connectPWD);
+                    mRASHelper.CreateOrUpdateVPN();
+                    mRASHelper.TryConnectVPN();
+                    searchVPNs();
+                    connCount = 2;
+                }
+                else
+                {
+                    Log.debug(TAG, "输入有误!");
+                    MessageBox.Show("输入有误!");
+                }
+            }
+            catch (Exception err)
+            {
+                MessageBox.Show("拨号失败!mRASHelper error msg:" + err.ToString());
+                Log.debug(TAG, "login_Click mRASHelper error : " + err);
+            }*/
         }
 
         private void button_exit1_Click(object sender, EventArgs e)
         {
             Log.debug(TAG, "exit1 click");
-            Log.console("exit1 click");
             exit();
         }
 
         private void button_exit2_Click(object sender, EventArgs e)
         {
             Log.debug(TAG, "exit2 click");
-            Log.console("exit2 click");
             exit();
         }
 
@@ -160,7 +189,6 @@ namespace blephoneVPN
                            + ";Pwd=" + Properties.Settings.Default.sql_pwd;
             sqlcmd = "SELECT * FROM " + Properties.Settings.Default.sql_table;
             Log.debug(TAG, "mysqlConnectStr Server=" + Properties.Settings.Default.sql_ip + ", Database=" + Properties.Settings.Default.sql_db);
-            Log.console("mysqlConnectStr : "+ mysqlConnectStr);
             try
             {
                 conn = new MySqlConnection(mysqlConnectStr);
@@ -172,22 +200,19 @@ namespace blephoneVPN
                 {
                     string dataReadResult = "VPN login id=" + dataReader.GetInt16(0) + ", ip=" + dataReader.GetString(1) + ", update=" + dataReader.GetString(2);
                     Log.debug(TAG, dataReadResult);
-                    Log.console(dataReadResult);
                     connectIP = dataReader.GetString(1);
                 }
             }
             catch (Exception err)
             {
-                Log.debug(TAG,err.ToString());
+                Log.debug(TAG, "getConnectIP error : " + err.ToString());
                 Log.Error(TAG, "getConnectIP failed!", err);
                 MessageBox.Show("数据库无法访问,VPN IP设置失败!error msg:" + err.ToString());
-                Log.console(err.ToString());
                 Debug.Assert(false, err.ToString());
             }
             finally
             {
                 Log.debug(TAG, "close sql connection");
-                Log.console("close sql connection");
                 if (dataReader != null && !dataReader.IsClosed)
                 {
                     dataReader.Close();
@@ -206,7 +231,6 @@ namespace blephoneVPN
                 connectUserName = this.cb_username.Text.ToString();
                 connectPWD = this.tb_pwd1.Text.ToString();
                 string encPwd = des.MD5Encrypt(connectPWD, key);
-                Log.console("getInputValue connectUserName : " + connectUserName + ", connectPWD : " + encPwd);
                 Log.debug(TAG, "getInputValue connectUserName : " + connectUserName + ", connectPWD : " + encPwd);
             }
             else if (btn == "button_login2")
@@ -215,17 +239,13 @@ namespace blephoneVPN
                 connectUserName = this.tb_username2.Text.ToString();
                 connectPWD = this.tb_pwd2.Text.ToString();
                 string encPwd = des.MD5Encrypt(connectPWD, key);
-                Log.console("getInputValue connectIP : " + connectIP + ", connectUserName : " + connectUserName + ", connectPWD : " + encPwd);
                 Log.debug(TAG, "getInputValue connectIP : " + connectIP + ", connectUserName : " + connectUserName + ", connectPWD : " + encPwd);
             }
-#if DEBUG
-            Console.WriteLine("InputValue ip={0},  username={1},  password={2}", connectIP, connectUserName, connectPWD);
-#endif
+            Log.console("InputValue ip = " + connectIP + ", username = " + connectUserName + ", password = " + connectPWD);
         }
 
         public void exit()
         {
-            Log.console("application exit");
             Log.debug(TAG, "application exit");
             if (endTime != null)
             {
@@ -233,16 +253,15 @@ namespace blephoneVPN
             }
             if (connCount == 1)
             {
-                Log.console("exit mVPNConnectHelper");
                 Log.debug(TAG, "exit mVPNConnectHelper");
                 mVPNConnectHelper.CancelDialAsync();
                 mVPNConnectHelper.Disconnect();
             }
             else if (connCount == 2)
             {
-                Log.console("exit mRASHelper");
                 Log.debug(TAG, "exit mRASHelper");
                 mRASHelper.TryDisConnectVPN();
+                Thread.Sleep(2000);
                 mRASHelper.TryDeleteVPN();
             }
             connCount = 0;
@@ -257,18 +276,18 @@ namespace blephoneVPN
             if (e.Connected)
             {
                 Log.debug(TAG, "VPNConnectHelper_DialAsyncComplete===========connect!==========");
-                Log.console("===========connect!==========");
                 setUsers();
                 this.vpnnotify.ShowBalloonTip(3000, "...", "连接成功", ToolTipIcon.Info);
                 endTimeToDo();
+                this.button_login1.Enabled = false;
                 this.Hide();
                 //new CreateNetDrive().Show();
                 //PublicVar.isDriveOpen = true;
             }
             else if (e.Error != null)
             {
+                this.button_login1.Enabled = true;
                 Log.debug(TAG, "VPNConnectHelper_DialAsyncComplete连接失败 : " + e.Error.Message);
-                Log.console("VPNConnectHelper_DialAsyncComplete连接失败 : " + e.Error.Message);
                 this.vpnnotify.ShowBalloonTip(3000, "...", "连接失败" + "\r\n" + e.Error.Message, ToolTipIcon.Info);
             }
         }
@@ -276,8 +295,6 @@ namespace blephoneVPN
         void VPNConnectHelper_DialStateChange(RasDialer dialer, StateChangedEventArgs e)
         {
             Log.debug(TAG, "VPNConnectHelper_DialStateChange ErrorCode : " + e.ErrorCode + ", State : " + e.State);
-            Log.console("===========VPNConnectHelper_DialStateChange==========");
-            Log.console("State : " + e.State);
             if (e.ErrorCode == 0)
             {
                 if (btn_clicked == 1)
@@ -293,7 +310,7 @@ namespace blephoneVPN
             }
             else
             {
-                Log.console("VPNConnectHelper_DialStateChange错误信息:" + e.ErrorMessage);
+                this.button_login1.Enabled = true;
                 Log.debug(TAG, "VPNConnectHelper_DialStateChange错误信息:" + e.ErrorMessage);
                 if (btn_clicked == 1)
                 {
@@ -362,8 +379,7 @@ namespace blephoneVPN
 
         private void tsm_setting_Click(object sender, EventArgs e)
         {
-            Log.debug(TAG, "tsm_setting_Click");
-            Log.console("PublicVar.isSettingOpen : " + PublicVar.isSettingOpen);
+            Log.debug(TAG, "tsm_setting_Click PublicVar.isSettingOpen : " + PublicVar.isSettingOpen);
             string info = "PublicVar.isSettingOpen : " + PublicVar.isSettingOpen;
             if (!PublicVar.isSettingOpen)
             {
@@ -374,8 +390,7 @@ namespace blephoneVPN
 
         private void tsm_drive_Click(object sender, EventArgs e)
         {
-            Log.debug(TAG, "tsm_drive_Click");
-            Log.console("PublicVar.isDriveOpen : " + PublicVar.isDriveOpen);
+            Log.debug(TAG, "tsm_drive_Click PublicVar.isDriveOpen : " + PublicVar.isDriveOpen);
             if (!PublicVar.isDriveOpen)
             {
                 PublicVar.isDriveOpen = true;
@@ -407,7 +422,7 @@ namespace blephoneVPN
             }
             for (int i = 0; i < users.Count; i++)
             {
-                Log.console("Main_Load cb_username.Text:" + this.cb_username.Text + ", tb_pwd1.Text:" + this.tb_pwd1.Text);
+                Log.debug(TAG, "Main_Load cb_username.Text:" + this.cb_username.Text + ", tb_pwd1.Text:" + this.tb_pwd1.Text);
                 if (encryptUsername != emptykey)
                 {
                     if (users.ContainsKey(encryptUsername))
@@ -415,8 +430,8 @@ namespace blephoneVPN
                         string decryptPassword = des.MD5Decrypt(users[encryptUsername].Password, key);
                         this.tb_pwd1.Text = decryptPassword;
                         this.cb_rem.Checked = true;
-                        Log.debug(TAG, "load password : '" + users[encryptUsername].Password + "' to tb_pwd1.Text");
-                        Log.console("Main_Load cb_username.Text:" + this.cb_username.Text + ", tb_pwd1.Text:" + this.tb_pwd1.Text);
+                        Log.debug(TAG, "Main_Load load password : '" + users[encryptUsername].Password + "' to tb_pwd1.Text\n" 
+                            + "cb_username.Text:" + this.cb_username.Text + ", tb_pwd1.Text:" + this.tb_pwd1.Text);
                     }
                 }
             }
@@ -441,7 +456,7 @@ namespace blephoneVPN
                         this.tb_pwd1.Text = "";
                         this.cb_rem.Checked = false;
                     }
-                    Log.console("cb_username_SelectedValueChanged cb_username.Text:" + this.cb_username.Text + ", tb_pwd1.Text:" + this.tb_pwd1.Text);
+                    Log.debug(TAG, "cb_username_SelectedValueChanged cb_username.Text:" + this.cb_username.Text + ", tb_pwd1.Text:" + this.tb_pwd1.Text);
                 }
             }
         }
@@ -452,7 +467,6 @@ namespace blephoneVPN
             BinaryFormatter bf = new BinaryFormatter();
             try
             {
-                Log.console("getUsers fs.Length:" + fs.Length);
                 Log.debug(TAG, "get all users, filestream size : " + fs.Length);
                 if (fs.Length > 0)
                 {
@@ -463,7 +477,6 @@ namespace blephoneVPN
             {
                 MessageBox.Show("获取保存用户信息失败!error msg:" + ex.ToString());
                 Log.debug(TAG, "get all users failed Exception : " + ex);
-                Log.console("get all users failed Exception : " + ex);
             }
             finally
             {
@@ -496,14 +509,12 @@ namespace blephoneVPN
                     users.Remove(user.Username);
                 }
                 Log.debug(TAG, "add user username : " + user.Username + ", password : " + user.Password);
-                Log.console("setUsers user.Username:" + user.Username + ", user.Password:" + user.Password);
                 users.Add(user.Username, user);
                 bf.Serialize(fs, users);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("保存用户信息失败!error msg:" + ex.ToString());
-                Log.console("add user failed Exception : " + ex);
                 Log.debug(TAG, "add user failed Exception : " + ex);
             }
             finally
@@ -514,7 +525,7 @@ namespace blephoneVPN
 
         public void endTimeToDo()
         {
-            Log.console("endTimeToDo run");
+            Log.debug(TAG, "endTimeToDo run");
             endTime = new System.Timers.Timer();
             endTime.Interval = intTime;
             endTime.Elapsed += new System.Timers.ElapsedEventHandler(theout);
@@ -525,7 +536,7 @@ namespace blephoneVPN
 
         private void theout(object source, System.Timers.ElapsedEventArgs e)
         {
-            Log.console("theout run");
+            Log.debug(TAG, "theout run");
             this.UIThread(delegate { new Warning(this).Show(); });
         }
 
@@ -536,7 +547,7 @@ namespace blephoneVPN
 
         private void searchVPNs()
         {
-            Log.console("searchVPNs run");
+            Log.debug(TAG, "searchVPNs run");
             searchTime = new System.Timers.Timer();
             searchTime.Interval = intSearchTime;
             searchTime.Elapsed += new System.Timers.ElapsedEventHandler(searchTime_Elapsed);
@@ -547,33 +558,42 @@ namespace blephoneVPN
 
         private void searchTime_Elapsed(object source, System.Timers.ElapsedEventArgs e)
         {
+            searchVPNName = new List<string>();
             searchVPNName = mRASHelper.GetCurrentConnectingVPNNames();
+            string tmp = string.Join("\n", searchVPNName.ToArray());
             searchRount += 1;
-            Log.console("searchTime_Elapsed run times : " + searchRount);
-            foreach(string name in searchVPNName)
+            Log.debug(TAG, "searchTime_Elapsed run times : " + searchRount + ", searchVPNName : " + tmp);
+            this.UIThread(delegate
             {
-                Log.console("search vpn name : " + name);
-                if (name == VPNNAME)
+                if (searchRount <= 10)
                 {
-                    this.UIThread(delegate
+                    if (searchVPNName.Contains(VPNNAME))
                     {
-                        if (searchRount <= 20)
-                        {
-                            this.vpnnotify.ShowBalloonTip(3000, "...", "连接成功", ToolTipIcon.Info);
-                            Log.console("连接成功");
-                            endTimeToDo();
-                            this.Hide();
-                        }
-                        else if (searchRount > 20)
-                        {
-                            this.vpnnotify.ShowBalloonTip(3000, "...", "连接失败", ToolTipIcon.Info);
-                            Log.console("连接失败");
-                        }
-                    });
-                    searchTime.Elapsed -= new System.Timers.ElapsedEventHandler(searchTime_Elapsed);
-                    searchVPNName = null;
+                        this.vpnnotify.ShowBalloonTip(3000, "...", "连接成功", ToolTipIcon.Info);
+                        Log.debug(TAG, "连接成功");
+                        endTimeToDo();
+                        this.button_login1.Enabled = false;
+                        this.Hide();
+                        searchTime.Elapsed -= new System.Timers.ElapsedEventHandler(searchTime_Elapsed);
+                        searchVPNName = null;
+                    }
+                    else
+                    {
+                        Log.debug(TAG, "searchTime_Elapsed searchVPNName not Contains VPNNAME");
+                    }
                 }
-            }
+                else if (searchRount > 10)
+                {
+                    if (!searchVPNName.Contains(VPNNAME))
+                    {
+                        this.vpnnotify.ShowBalloonTip(3000, "...", "连接失败", ToolTipIcon.Info);
+                        Log.debug(TAG, "连接失败");
+                        this.button_login1.Enabled = true;
+                        searchTime.Elapsed -= new System.Timers.ElapsedEventHandler(searchTime_Elapsed);
+                        searchVPNName = null;
+                    }
+                }
+            });
         }
     }
 

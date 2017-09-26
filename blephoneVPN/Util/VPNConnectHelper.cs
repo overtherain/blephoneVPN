@@ -32,8 +32,7 @@ namespace blephoneVPN.Util
         {
             CurrentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             PhoneBookPath = Path.Combine(CurrentDirectory, @"Resource\rasphone.pbk");
-            Console.WriteLine("VPNConnectHelper PhoneBookPath : " + PhoneBookPath);
-
+            Log.debug(TAG, "VPNConnectHelper PhoneBookPath : " + PhoneBookPath);
 
             allUsersPhoneBook = new RasPhoneBook();
             allUsersPhoneBook.Open();
@@ -43,13 +42,12 @@ namespace blephoneVPN.Util
             //allUsersPhoneBook.Open(dialer.PhoneBookPath);
             dialer.StateChanged += new EventHandler<StateChangedEventArgs>(dialer_StateChanged);
             dialer.DialCompleted += new EventHandler<DialCompletedEventArgs>(dialer_DialCompleted);
-            Console.WriteLine("VPNConnectHelper init");
+            Log.debug(TAG, "VPNConnectHelper init");
         }
 
         private void CreateOrUpdateVPNEntry(string ip, string user, string pwd)
         {
             Log.debug(TAG, "CreateOrUpdateVPNEntry ip:" + ip + ", user:" + user);
-            Console.WriteLine("CreateOrUpdateVPNEntry ip:" + ip + ", user:" + user);
             try
             {
                 RasEntry entry;
@@ -82,7 +80,6 @@ namespace blephoneVPN.Util
         public void DialAsync(string ip, string user, string pwd)
         {
             Log.debug(TAG, "DialAsync ip:" + ip + ", user:" + user);
-            Console.WriteLine("DialAsync ip:" + ip + ", user:" + user);
             CreateOrUpdateVPNEntry(ip, user, pwd);
             //Disconnect();
             dialer.DialAsync();
@@ -91,7 +88,6 @@ namespace blephoneVPN.Util
         public void Dial(string ip, string user, string pwd)
         {
             Log.debug(TAG, "Dial ip:" + ip + ", user:" + user);
-            Console.WriteLine("Dial ip:" + ip + ", user:" + user);
             CreateOrUpdateVPNEntry(ip, user, pwd);
             //Disconnect();
             dialer.Dial();
@@ -100,14 +96,12 @@ namespace blephoneVPN.Util
         public void CancelDialAsync()
         {
             Log.debug(TAG, "CancelDialAsync");
-            Console.WriteLine("CancelDialAsync");
             dialer.DialAsyncCancel();
         }
 
         public void Disconnect()
         {
-            Console.WriteLine("Disconnect dialer.EntryName : " + dialer.EntryName);
-            Log.debug(TAG, "Disconnect : " + dialer.EntryName);
+            Log.debug(TAG, "Disconnect dialer.EntryName : " + dialer.EntryName);
             /*if (dialer.EntryName == VPNNAME)
             {
                 Console.WriteLine("Disconnect dialer.EntryName : " + dialer.EntryName);
@@ -120,7 +114,7 @@ namespace blephoneVPN.Util
             //ReadOnlyCollection<RasConnection> conList = RasConnection.GetActiveConnections();
             foreach (RasConnection conn in dialer.GetActiveConnections())
             {
-                Console.WriteLine("Disconnect conn.EntryName : " + conn.EntryName);
+                Log.debug(TAG, "Disconnect conn.EntryName : " + conn.EntryName);
                 if (conn.EntryName == VPNNAME)
                 {
                     conn.HangUp();
