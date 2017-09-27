@@ -41,6 +41,7 @@ namespace blephoneVPN
 
             m1.endTimeToDo();
             time.Elapsed -= new System.Timers.ElapsedEventHandler(theout);
+            time.Stop();
             endSecond = 60;
             this.Close();
         }
@@ -61,6 +62,7 @@ namespace blephoneVPN
             {
                 Log.debug(TAG, "timeout exit, time : " + endSecond);
                 time.Elapsed -= new System.Timers.ElapsedEventHandler(theout);
+                time.Stop();
                 Properties.Settings.Default.will_close = true;
                 Application.Exit();
             }

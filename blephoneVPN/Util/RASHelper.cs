@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Reflection;
+using System.Net;
 
 namespace blephoneVPN.Util
 {
@@ -142,23 +143,26 @@ namespace blephoneVPN.Util
             RasPhoneBook allUsersPhoneBook = new RasPhoneBook();
             allUsersPhoneBook.Open();
 
-            // 如果已经该名称的VPN已经存在，则更新这个VPN服务器地址
+            RasEntry entry = null;
             if (allUsersPhoneBook.Entries.Contains(updateVPNname))
             {
-                Log.debug(TAG, "CreateOrUpdateVPN update");
-                allUsersPhoneBook.Entries[updateVPNname].PhoneNumber = updateVPNip;
-                // 不管当前VPN是否连接，服务器地址的更新总能成功，如果正在连接，则需要VPN重启后才能起作用
-                allUsersPhoneBook.Entries[updateVPNname].Update();                
+                entry = allUsersPhoneBook.Entries[updateVPNname];
+                entry.EncryptionType = RasEncryptionType.Optional;
+                entry.PhoneNumber = updateVPNip;
+                IPAddress _ip;
+                IPAddress.TryParse(updateVPNip, out _ip);
+                entry.IPAddress = _ip;
+                entry.Options.UsePreSharedKey = true;
+                entry.UpdateCredentials(RasPreSharedKey.Client, "123456");
+                entry.Update();
             }
-            // 创建一个新VPN
             else
             {
-                Log.debug(TAG, "CreateOrUpdateVPN add new");
-                RasEntry entry = RasEntry.CreateVpnEntry(updateVPNname, updateVPNip, RasVpnStrategy.L2tpOnly, RasDevice.GetDeviceByName("(L2TP)", RasDeviceType.Vpn));
+                entry = RasEntry.CreateVpnEntry(updateVPNname, updateVPNip, RasVpnStrategy.L2tpOnly, RasDevice.GetDeviceByName("(L2TP)", RasDeviceType.Vpn));
                 entry.EncryptionType = RasEncryptionType.Optional;
+                entry.Options.UsePreSharedKey = true;
                 allUsersPhoneBook.Entries.Add(entry);
-                dialer.EntryName = updateVPNname;
-                dialer.PhoneBookPath = RasPhoneBook.GetPhoneBookPath(RasPhoneBookType.AllUsers);
+                entry.UpdateCredentials(RasPreSharedKey.Client, "123456");
             }
         }
 
@@ -170,7 +174,6 @@ namespace blephoneVPN.Util
         public void TryDeleteVPN(string delVpnName)
         {
             Log.debug(TAG, "TryDeleteVPN");
-            RasDialer dialer = new RasDialer();
             RasPhoneBook allUsersPhoneBook = new RasPhoneBook();
             allUsersPhoneBook.Open();
             if (allUsersPhoneBook.Entries.Contains(delVpnName))
@@ -184,7 +187,7 @@ namespace blephoneVPN.Util
         /// </summary>
         public List<string> GetCurrentConnectingVPNNames()
         {
-            Log.debug(TAG, "GetCurrentConnectingVPNNames");
+            Log.debug(TAG, "GetCurrentConnectingVPNNames in");
             List<string> ConnectingVPNList = new List<string>();
             Process proIP = new Process();
             string strResult = null;
@@ -196,28 +199,27 @@ namespace blephoneVPN.Util
                 proIP.StartInfo.RedirectStandardInput = true;
                 proIP.StartInfo.RedirectStandardOutput = true;
                 proIP.StartInfo.RedirectStandardError = true;
-                proIP.StartInfo.CreateNoWindow = true;//不显示cmd窗口 
+                proIP.StartInfo.CreateNoWindow = true;
                 proIP.Start();
 
                 proIP.StandardInput.WriteLine(RasDialFileName);
                 proIP.StandardInput.WriteLine("exit");
 
-                // 命令行运行结果
                 strResult = proIP.StandardOutput.ReadToEnd();
                 proIP.Close();
+                Log.debug(TAG, "GetCurrentConnectingVPNNames run process result : \n" + strResult);
             }
             catch(Exception ex)
             {
                 Log.debug(TAG, "GetCurrentConnectingVPNNames error msg : " + ex.ToString());
             }
 
-            Log.debug(TAG, "GetCurrentConnectingVPNNames run process result : \n" + strResult);
-            // 如果匹配，则说有正在连接的VPN
             int begin = strResult.IndexOf("已连接") + 3;
             int end = strResult.IndexOf("命令已完成");
             string getVpnNames = null;
             getVpnNames = strResult.Substring(begin, end - begin);
             Log.debug(TAG, "GetCurrentConnectingVPNNames getVpnNames : \n" + getVpnNames);
+
             string[] sArray = getVpnNames.Split('\n');
             foreach (string e in sArray)
             {
@@ -228,9 +230,10 @@ namespace blephoneVPN.Util
                 if (sArray[index] != string.Empty)
                     ConnectingVPNList.Add(sArray[index].Replace("\r", ""));
             }
+
             string tmp = string.Join("\n", ConnectingVPNList.ToArray());
             Log.debug(TAG, "GetCurrentConnectingVPNNames ConnectingVPNList : \n" + tmp);
-            // 没有正在连接的VPN，则直接返回一个空List<string>
+
             return ConnectingVPNList;
         }
     }
