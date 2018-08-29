@@ -19,7 +19,7 @@ namespace blephoneVPN
 {
     public partial class Main : Form
     {
-        private static string connectIP = "";
+        public static string connectIP = "";
         private static string connectUserName = "";
         private static string connectPWD = "";
         private static string VPNNAME = "blephoneVPN";
@@ -52,6 +52,7 @@ namespace blephoneVPN
         {
             InitializeComponent();
             Log.debug(TAG, "init main");
+            getConnectIP();
 
             this.SizeChanged += new EventHandler(Form1_SizeChanged);
             this.tb_msg1.Text = "";
@@ -302,7 +303,7 @@ namespace blephoneVPN
         {
             Button but = (Button)sender;
             getInputValue(but.Name);
-            getConnectIP();
+            //getConnectIP();
 
             if (connectIP != "" && connectUserName != "" && connectPWD != "")
             {

@@ -21,6 +21,7 @@ namespace blephoneVPN
             this.tb_sql_username.Text = Properties.Settings.Default.sql_username;
             this.tb_sql_pwd.Text = Properties.Settings.Default.sql_pwd;
             this.tb_sql_table.Text = Properties.Settings.Default.sql_table;
+            this.tb_vpn_ip.Text = Main.connectIP;
         }
 
         private void btn_save_Click(object sender, EventArgs e)
@@ -45,6 +46,7 @@ namespace blephoneVPN
             Properties.Settings.Default.sql_username = this.tb_sql_username.Text.ToString();
             Properties.Settings.Default.sql_pwd = this.tb_sql_pwd.Text.ToString();
             Properties.Settings.Default.sql_table = this.tb_sql_table.Text.ToString();
+            Main.connectIP = this.tb_vpn_ip.Text.ToString();
             
             Properties.Settings.Default.Save();
         }

@@ -40,6 +40,8 @@
             this.tb_sql_db = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.tb_sql_table = new System.Windows.Forms.TextBox();
+            this.tb_vpn_ip = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -100,7 +102,7 @@
             // btn_save
             // 
             this.btn_save.Font = new System.Drawing.Font("幼圆", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btn_save.Location = new System.Drawing.Point(50, 251);
+            this.btn_save.Location = new System.Drawing.Point(50, 300);
             this.btn_save.Name = "btn_save";
             this.btn_save.Size = new System.Drawing.Size(75, 34);
             this.btn_save.TabIndex = 8;
@@ -111,7 +113,7 @@
             // btn_cancel
             // 
             this.btn_cancel.Font = new System.Drawing.Font("幼圆", 11.25F, System.Drawing.FontStyle.Bold);
-            this.btn_cancel.Location = new System.Drawing.Point(182, 251);
+            this.btn_cancel.Location = new System.Drawing.Point(181, 300);
             this.btn_cancel.Name = "btn_cancel";
             this.btn_cancel.Size = new System.Drawing.Size(75, 34);
             this.btn_cancel.TabIndex = 9;
@@ -155,12 +157,32 @@
             this.tb_sql_table.Size = new System.Drawing.Size(138, 24);
             this.tb_sql_table.TabIndex = 7;
             // 
+            // tb_vpn_ip
+            // 
+            this.tb_vpn_ip.Font = new System.Drawing.Font("幼圆", 11.25F, System.Drawing.FontStyle.Bold);
+            this.tb_vpn_ip.Location = new System.Drawing.Point(143, 248);
+            this.tb_vpn_ip.Name = "tb_vpn_ip";
+            this.tb_vpn_ip.Size = new System.Drawing.Size(138, 24);
+            this.tb_vpn_ip.TabIndex = 12;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("幼圆", 11.25F, System.Drawing.FontStyle.Bold);
+            this.label6.Location = new System.Drawing.Point(24, 251);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(70, 15);
+            this.label6.TabIndex = 13;
+            this.label6.Text = "VPN IP:";
+            // 
             // Setting
             // 
             this.AcceptButton = this.btn_save;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(304, 311);
+            this.ClientSize = new System.Drawing.Size(304, 358);
+            this.Controls.Add(this.tb_vpn_ip);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.tb_sql_table);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.tb_sql_db);
@@ -200,5 +222,7 @@
         private System.Windows.Forms.TextBox tb_sql_db;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox tb_sql_table;
+        private System.Windows.Forms.TextBox tb_vpn_ip;
+        private System.Windows.Forms.Label label6;
     }
 }
