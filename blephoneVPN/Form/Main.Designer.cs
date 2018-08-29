@@ -378,6 +378,7 @@
             this.tsm_warning.Name = "tsm_warning";
             this.tsm_warning.Size = new System.Drawing.Size(66, 21);
             this.tsm_warning.Text = "warning";
+            this.tsm_warning.Visible = false;
             this.tsm_warning.Click += new System.EventHandler(this.tsm_warning_Click);
             // 
             // Main
@@ -393,9 +394,9 @@
             this.MainMenuStrip = this.menuStrip1;
             this.MaximizeBox = false;
             this.Name = "Main";
-            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "blephoneVPN";
+            this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
             this.Load += new System.EventHandler(this.Main_Load);
             this.tabControl1.ResumeLayout(false);

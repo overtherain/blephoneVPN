@@ -14,132 +14,110 @@ namespace blephoneVPN.Util
 {
     public class VPNConnectHelper
     {
-        public static Type TAG = typeof(VPNConnectHelper);
-        private RasPhoneBook allUsersPhoneBook ;
-        private RasDialer dialer = new RasDialer();
-        private readonly string VPNNAME = "blephoneVPN";
+        private static string VPNNAME = "blephoneVPN";
+        private RasPhoneBook allUsersPhoneBook = null;
+        private RasDialer dialer = null;
+        private RasHandle handle = null;
 
+        public static Type TAG = typeof(VPNConnectHelper);
         public string CurrentDirectory { get; private set; }
         public string PhoneBookPath { get; private set; }
 
         public delegate void DialStateChangeHandler(RasDialer dialer, StateChangedEventArgs e);
         public event DialStateChangeHandler DialStateChange;
-
         public delegate void DialAsyncCompleteHandler(RasDialer dialer, DialCompletedEventArgs e);
         public event DialAsyncCompleteHandler DialAsyncComplete;
 
         public VPNConnectHelper()
         {
-            CurrentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            PhoneBookPath = Path.Combine(CurrentDirectory, @"Resource\rasphone.pbk");
-            Console.WriteLine("VPNConnectHelper PhoneBookPath : " + PhoneBookPath);
-
+            Log.debug(TAG, "VPNConnectHelper init end");
 
             allUsersPhoneBook = new RasPhoneBook();
             allUsersPhoneBook.Open();
+
+            dialer = new RasDialer();
             dialer.EntryName = VPNNAME;
-            //dialer.Timeout = 20000;
+            dialer.Timeout = 20000;
             dialer.PhoneBookPath = RasPhoneBook.GetPhoneBookPath(RasPhoneBookType.AllUsers);
-            //allUsersPhoneBook.Open(dialer.PhoneBookPath);
             dialer.StateChanged += new EventHandler<StateChangedEventArgs>(dialer_StateChanged);
             dialer.DialCompleted += new EventHandler<DialCompletedEventArgs>(dialer_DialCompleted);
-            Console.WriteLine("VPNConnectHelper init");
         }
 
-        private void CreateOrUpdateVPNEntry(string ip, string user, string pwd)
+        private void CreateOrUpdateVPNEntry(string ip)
         {
-            Log.debug(TAG, "CreateOrUpdateVPNEntry ip:" + ip + ", user:" + user);
-            Console.WriteLine("CreateOrUpdateVPNEntry ip:" + ip + ", user:" + user);
+            Log.debug(TAG, "CreateOrUpdateVPNEntry ip:" + ip);
             try
             {
-                RasEntry entry;
-                if (!allUsersPhoneBook.Entries.Contains(VPNNAME))
-                {
-                    entry = RasEntry.CreateVpnEntry(VPNNAME, ip, RasVpnStrategy.L2tpOnly, RasDevice.GetDeviceByName("(L2TP)", RasDeviceType.Vpn));
-                    entry.EncryptionType = RasEncryptionType.Optional;
-                    allUsersPhoneBook.Entries.Add(entry);
-                }
-                else
+                RasEntry entry = null;
+                if (allUsersPhoneBook.Entries.Contains(VPNNAME))
                 {
                     entry = allUsersPhoneBook.Entries[VPNNAME];
+                    entry.EncryptionType = RasEncryptionType.Optional;
                     entry.PhoneNumber = ip;
                     IPAddress _ip;
                     IPAddress.TryParse(ip, out _ip);
                     entry.IPAddress = _ip;
+                    entry.Options.UsePreSharedKey = true;
+                    entry.UpdateCredentials(RasPreSharedKey.Client, "123456");
+                    entry.Update();
                 }
-                NetworkCredential nc = new NetworkCredential(user, pwd);
-                entry.UpdateCredentials(nc);
-                entry.Update();
+                else
+                {
+                    entry = RasEntry.CreateVpnEntry(VPNNAME, ip, RasVpnStrategy.L2tpOnly, RasDevice.GetDeviceByName("(L2TP)", RasDeviceType.Vpn));
+                    entry.EncryptionType = RasEncryptionType.Optional;
+                    entry.Options.UsePreSharedKey = true;
+                    allUsersPhoneBook.Entries.Add(entry);
+                    entry.UpdateCredentials(RasPreSharedKey.Client, "123456");
+                }
             }
             catch(Exception ex)
             {
                 MessageBox.Show("创建VPN失败!error msg:" + ex.ToString());
                 Log.debug(TAG, "CreateOrUpdateVPNEntry error:" + ex.ToString());
             }
-            
         }
 
         public void DialAsync(string ip, string user, string pwd)
         {
             Log.debug(TAG, "DialAsync ip:" + ip + ", user:" + user);
-            Console.WriteLine("DialAsync ip:" + ip + ", user:" + user);
-            CreateOrUpdateVPNEntry(ip, user, pwd);
-            //Disconnect();
-            dialer.DialAsync();
+            CreateOrUpdateVPNEntry(ip);
+            dialer.Credentials = new NetworkCredential(user, pwd);
+            handle = dialer.DialAsync();
         }
 
         public void Dial(string ip, string user, string pwd)
         {
             Log.debug(TAG, "Dial ip:" + ip + ", user:" + user);
-            Console.WriteLine("Dial ip:" + ip + ", user:" + user);
-            CreateOrUpdateVPNEntry(ip, user, pwd);
-            //Disconnect();
-            dialer.Dial();
-        }
-
-        public void CancelDialAsync()
-        {
-            Log.debug(TAG, "CancelDialAsync");
-            Console.WriteLine("CancelDialAsync");
-            dialer.DialAsyncCancel();
+            CreateOrUpdateVPNEntry(ip);
+            dialer.Credentials = new NetworkCredential(user, pwd);
+            handle = dialer.Dial();
         }
 
         public void Disconnect()
         {
-            Console.WriteLine("Disconnect dialer.EntryName : " + dialer.EntryName);
-            Log.debug(TAG, "Disconnect : " + dialer.EntryName);
-            /*if (dialer.EntryName == VPNNAME)
+            Log.debug(TAG, "Disconnect dialer.EntryName : " + dialer.EntryName);
+            if (dialer.IsBusy)
             {
-                Console.WriteLine("Disconnect dialer.EntryName : " + dialer.EntryName);
                 dialer.DialAsyncCancel();
-                RasConnection conn = dialer.CreateObjRef;
-                dialer.Dispose();
-                allUsersPhoneBook.Entries.Remove(VPNNAME);
-                Log.debug(TAG, "Disconnect Remove PhoneBook");
-            }*/
-            //ReadOnlyCollection<RasConnection> conList = RasConnection.GetActiveConnections();
-            foreach (RasConnection conn in dialer.GetActiveConnections())
+            }
+            else
             {
-                Console.WriteLine("Disconnect conn.EntryName : " + conn.EntryName);
-                if (conn.EntryName == VPNNAME)
+                RasConnection connection = RasConnection.GetActiveConnectionByHandle(handle);
+                if (connection != null)
                 {
-                    conn.HangUp();
-                    allUsersPhoneBook.Entries.Remove(VPNNAME);
-                    Log.debug(TAG, "Disconnect Remove PhoneBook");
-                    return;
+                    connection.HangUp();
                 }
             }
+            allUsersPhoneBook.Entries.Remove(VPNNAME);
         }
 
         private void dialer_DialCompleted(object sender, DialCompletedEventArgs e)
         {
-            Log.debug(TAG, "dialer_DialCompleted Error:" + e.Error);
             DialAsyncComplete((RasDialer)sender, e);
         }
 
         private void dialer_StateChanged(object sender, StateChangedEventArgs e)
         {
-            Log.debug(TAG, "dialer_StateChanged State:" + e.State);
             DialStateChange((RasDialer)sender, e);
         }
     }

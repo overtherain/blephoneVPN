@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using blephoneVPN.Util;
 
 namespace blephoneVPN
 {
@@ -13,6 +14,8 @@ namespace blephoneVPN
         [STAThread]
         static void Main()
         {
+            Log.logname = AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.ToString("yyyyMMdd_HH-mm") + ".log";
+            Log.CreateDirectory();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Main());

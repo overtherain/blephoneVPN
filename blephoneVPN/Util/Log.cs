@@ -9,7 +9,9 @@ namespace blephoneVPN.Util
 {
     public class Log
     {
-        private static string logFile;
+        public static Type TAG = typeof(Log);
+        public static string logname = null;
+        private static string logFile = null;
         private static StreamWriter writer;
         private static FileStream fileStream = null;
 
@@ -23,15 +25,22 @@ namespace blephoneVPN.Util
             }
         }
 
-        public static void CreateDirectory(string infoPath)
+        public static void CreateDirectory()
         {
-            logFile = infoPath;
-            Console.WriteLine("CreateDirectory log file path is : {0}", logFile);
-            DirectoryInfo directoryInfo = Directory.GetParent(logFile);
-            if (!directoryInfo.Exists)
+            logFile = logname;
+            debug(TAG, "CreateDirectory log file path is : " + logFile);
+            if (logFile != null)
             {
-                Console.WriteLine("Create log directory");
-                directoryInfo.Create();
+                DirectoryInfo directoryInfo = Directory.GetParent(logFile);
+                if (!directoryInfo.Exists)
+                {
+                    debug(TAG, "Create log directory");
+                    directoryInfo.Create();
+                }
+            }
+            else
+            {
+                debug(TAG, "logFile directory is null!");
             }
         }
 
@@ -39,6 +48,9 @@ namespace blephoneVPN.Util
         {
             try
             {
+#if DEBUG
+                Console.WriteLine(info);
+#endif
                 System.IO.FileInfo fileInfo = new System.IO.FileInfo(logFile);
                 if (!fileInfo.Exists)
                 {
@@ -55,6 +67,7 @@ namespace blephoneVPN.Util
             }
             catch(Exception ex)
             {
+                Console.WriteLine("Create log file error : " + ex.ToString());
                 Debug.Assert(false, ex.ToString());
             }
             finally
@@ -67,6 +80,13 @@ namespace blephoneVPN.Util
                     fileStream.Dispose();
                 }
             }
+        }
+
+        public static void console(string msg)
+        { 
+#if DEBUG
+            Console.WriteLine(msg);
+#endif
         }
     }
 }
